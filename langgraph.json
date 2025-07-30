@@ -3,7 +3,8 @@
     "."
   ],
   "graphs": {
-    "main_agent": "./app/agents/main_agent/_graph.py:graph"
+    "main_agent": "./app/agents/main_agent/_graph.py:graph",
+    "codeact_agent": "./app/agents/codeact_agent/_graph.py:graph"
   },
   "env": ".env"
 }
