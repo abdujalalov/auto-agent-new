@@ -25,38 +25,11 @@ class CodeActAgent:
     def __init__(self, model, base_workspace_dir: str = "agent_workspace"):
         self.model = model
         self.base_workspace_dir = base_workspace_dir
-        # Simple inline system prompt to avoid formatting issues
-        simple_system_prompt = """You are an expert data analysis agent who solves tasks by generating and executing Python code.
-
-Work in a cycle of Thought, Code, and Observation:
-
-1. **Thought**: Analyze the current situation and plan your next step.
-2. **Code**: Generate Python code to execute your plan. Use print() to capture important results.
-3. **Observation**: Review code execution results and plan next steps.
-
-Available libraries: pandas (pd), numpy (np), matplotlib (plt), seaborn (sns), and full Python ecosystem.
-Variables persist between code executions - reuse them as needed.
-
-**Workspace Organization:**
-You have a dedicated workspace with these directories available as variables:
-- DATA_DIR: For CSV files and datasets  
-- OUTPUT_DIR: For general output files
-- VIZ_DIR: For charts and visualizations (matplotlib automatically saves here)
-- REPORTS_DIR: For reports and documentation
-- WORKSPACE_PATH: Root workspace directory
-
-Always save files to appropriate directories to keep things organized.
-
-Generate code in fenced code blocks like this:
-```python
-# Your code here
-print("Results go here")
-```
-
-When you have completed the task successfully, provide a final summary WITHOUT code blocks to end the conversation."""
+        # Use the proper system prompt that includes framework document instructions
+        system_prompt = CODEACT_SYSTEM
 
         self.prompt_template = ChatPromptTemplate.from_messages([
-            ("system", simple_system_prompt),
+            ("system", system_prompt),
             ("placeholder", "{messages}")
         ])
         self.graph = self._create_graph()
@@ -67,9 +40,30 @@ When you have completed the task successfully, provide a final summary WITHOUT c
         def agent_node(state: CodeActState, config: RunnableConfig) -> Command:
             """Agent reasoning and code generation node"""
             
+            # Prepare messages with framework context if provided
+            messages = state.messages.copy()
+            
+            # Add framework document context if provided
+            if state.framework_document_path:
+                # Convert to absolute path for the agent since execution context changes working directory
+                from pathlib import Path
+                abs_framework_path = Path(state.framework_document_path).resolve()
+                
+                framework_context = f"\n\n**Framework Document Available**: {abs_framework_path}\n" \
+                                  f"Read this document to understand the methodology you should follow."
+                
+                # Add framework context to the conversation
+                if messages and hasattr(messages[-1], 'content'):
+                    # Append to the last human message if it exists
+                    last_msg = messages[-1]
+                    if hasattr(last_msg, 'content'):
+                        from langchain_core.messages import HumanMessage
+                        enhanced_content = last_msg.content + framework_context
+                        messages[-1] = HumanMessage(content=enhanced_content)
+            
             # Use prompt template to format messages
             formatted_prompt = self.prompt_template.format_messages(
-                messages=state.messages
+                messages=messages
             )
             
             # Get model response
@@ -104,7 +98,7 @@ When you have completed the task successfully, provide a final summary WITHOUT c
                 return {"messages": []}
             
             # Get session-based workspace
-            execution_context = self._get_session_context(config)
+            execution_context = self._get_session_context(config, state.framework_document_path)
             
             # Execute code in persistent context
             output, new_context = execution_context.execute_code(
@@ -141,7 +135,7 @@ When you have completed the task successfully, provide a final summary WITHOUT c
 
         return compiled_graph
     
-    def _get_session_context(self, config: RunnableConfig) -> ExecutionContext:
+    def _get_session_context(self, config: RunnableConfig, framework_document_path: str = None) -> ExecutionContext:
         """Get or create session-based execution context"""
         configurable = config.get("configurable", {})
         
@@ -165,7 +159,7 @@ When you have completed the task successfully, provide a final summary WITHOUT c
             workspace_dir = f"{self.base_workspace_dir}/{user_id}_{session_id}"
         
         # Return execution context for this session
-        return ExecutionContext(workspace_dir)
+        return ExecutionContext(workspace_dir, framework_document_path)
     
     def _extract_code_blocks(self, content: str) -> Optional[str]:
         """Extract and combine Python code blocks from agent response"""
@@ -191,7 +185,7 @@ When you have completed the task successfully, provide a final summary WITHOUT c
         
         return None
     
-    def run(self, task: str, config: Dict[str, Any] = None, recursion_limit: int = 10) -> Dict[str, Any]:
+    def run(self, task: str, framework_document_path: str = None, config: Dict[str, Any] = None, recursion_limit: int = 5) -> Dict[str, Any]:
         """Run the CodeAct agent on a task"""
         
         # Merge recursion limit with provided config
@@ -200,13 +194,13 @@ When you have completed the task successfully, provide a final summary WITHOUT c
             run_config.update(config)
         
         # Get session context for initial state
-        session_context = self._get_session_context({"configurable": run_config.get("configurable", {})})
+        session_context = self._get_session_context({"configurable": run_config.get("configurable", {})}, framework_document_path)
         
         initial_state = CodeActState(
             messages=[HumanMessage(content=task)],
             script=None,
             context=session_context.get_context(),
-            framework_content=None,
+            framework_document_path=framework_document_path,
             current_task=task,
             report_sections=[]
         )

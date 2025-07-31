@@ -19,7 +19,7 @@ import seaborn as sns
 class ExecutionContext:
     """Manages persistent Python execution environment"""
     
-    def __init__(self, workspace_dir: str = None):
+    def __init__(self, workspace_dir: str = None, framework_document_path: str = None):
         """Initialize execution context with data science libraries and workspace"""
         
         # Set up workspace directory
@@ -79,6 +79,12 @@ class ExecutionContext:
             'REPORTS_DIR': str(self.workspace_path / "reports"),
         }
         
+        # Add framework document path if provided
+        if framework_document_path:
+            # Convert to absolute path since we're changing working directory
+            abs_framework_path = Path(framework_document_path).resolve()
+            self.globals_dict['FRAMEWORK_DOCUMENT_PATH'] = str(abs_framework_path)
+        
         # Execution history for debugging
         self.execution_history = []
         
@@ -117,9 +123,17 @@ class ExecutionContext:
         captured_output = io.StringIO()
         sys.stdout = captured_output
         
+        # Prepare execution context (like LangGraph CodeAct reference)
+        _locals = self.globals_dict.copy()
+        if existing_context:
+            _locals.update(existing_context)
+        
+        # Store original keys before execution (like LangGraph CodeAct reference)
+        original_keys = set(_locals.keys())
+        
         try:
-            # Execute the code
-            exec(code, self.globals_dict)
+            # Execute the code (following LangGraph CodeAct README pattern)
+            exec(code, __builtins__, _locals)
             
             # Get the output
             output = captured_output.getvalue()
@@ -131,17 +145,16 @@ class ExecutionContext:
                 'success': True
             })
             
-            # Extract user-defined variables (exclude built-ins and imports)
+            # Only return NEW variables created during execution (like LangGraph CodeAct reference)
+            # Clean up non-serializable objects that shouldn't persist (like file handles)
+            new_keys = set(_locals.keys()) - original_keys
             user_variables = {}
-            for key, value in self.globals_dict.items():
-                if not key.startswith('_') and not callable(value) or key in ['pd', 'np', 'plt', 'sns']:
-                    try:
-                        # Try to serialize value to check if it's transferable
-                        str(value)
-                        user_variables[key] = value
-                    except:
-                        # Skip non-serializable values
-                        continue
+            for key in new_keys:
+                value = _locals[key]
+                # Skip file-like objects and other non-persistent types by their type
+                if isinstance(value, (io.IOBase, io.TextIOWrapper, io.BufferedWriter, io.BufferedReader)):
+                    continue  # File objects don't need to persist
+                user_variables[key] = value
             
             return output if output else "Code executed successfully.", user_variables
             
@@ -156,23 +169,18 @@ class ExecutionContext:
                 'success': False
             })
             
-            return error_output, self.get_context()
+            # Return empty new variables on error
+            return error_output, {}
             
         finally:
             # Restore stdout
             sys.stdout = old_stdout
     
     def get_context(self) -> Dict[str, Any]:
-        """Get current execution context variables"""
-        user_variables = {}
-        for key, value in self.globals_dict.items():
-            if not key.startswith('_') and not callable(value) or key in ['pd', 'np', 'plt', 'sns']:
-                try:
-                    str(value)
-                    user_variables[key] = value
-                except:
-                    continue
-        return user_variables
+        """Get current execution context variables (empty for fresh context)"""
+        # In the new pattern, we only track variables created during execution
+        # Initial context is empty - variables are built up incrementally
+        return {}
     
     def reset_context(self):
         """Reset execution context to initial state"""

@@ -288,6 +288,87 @@ app/agents/
 │       └── codeact_system.md  # Agent prompts
 ```
 
+## Security Considerations
+
+### Current Implementation Status
+**⚠️ Development Mode**: Current implementation uses raw `exec()` following LangGraph CodeAct README pattern. Suitable for development and testing but requires hardening for production.
+
+### Security Architecture Evolution
+
+#### Phase 1: Current State (Development Safe)
+- **Pattern**: LangGraph CodeAct reference implementation
+- **Execution**: Raw `exec()` with variable isolation
+- **Workspace**: Session-based isolation with dedicated directories
+- **Suitable for**: Development, testing, trusted environments
+
+#### Phase 5: Security Hardening (Planned)
+Based on SmolaAgents security model:
+
+**Import Restrictions**:
+```python
+DANGEROUS_MODULES = [
+    "builtins", "io", "multiprocessing", "os", "pathlib",
+    "pty", "shutil", "socket", "subprocess", "sys"
+]
+```
+
+**Function Filtering**:
+```python
+DANGEROUS_FUNCTIONS = [
+    "builtins.eval", "builtins.exec", "builtins.__import__",
+    "os.system", "subprocess.run", "posix.system"
+]
+```
+
+**File System Controls**:
+- Restrict file access to workspace directories only
+- Path validation for all file operations
+- Safe file operation wrappers
+
+#### Phase 6: Production Security (Future)
+**Sandbox Options**:
+1. **LangChain Sandbox** (Pyodide/WebAssembly)
+   - Complete isolation from host system
+   - WebAssembly security model
+   - Python interpreter in browser-like environment
+
+2. **E2B Remote Execution**
+   - Cloud-based secure execution
+   - Complete network isolation
+   - Enterprise-grade security
+
+3. **Docker Containerization**
+   - OS-level isolation
+   - Resource limits and monitoring
+   - Network restrictions
+
+### Risk Assessment
+
+#### Current Risks (Development Phase)
+- **File system access**: Agent can read/write any accessible files
+- **Network access**: Agent can make HTTP requests, download content
+- **System commands**: Potential access to shell commands via imports
+- **Resource consumption**: No limits on CPU/memory usage
+
+#### Mitigated Risks
+- ✅ **Variable isolation**: Only new variables stored in state (prevents pollution)
+- ✅ **Workspace isolation**: Session-based directories prevent user conflicts
+- ✅ **Serialization safety**: Fixed pickle issues with proper variable filtering
+
+#### Production Requirements
+- [ ] Import restrictions implemented
+- [ ] Dangerous function filtering active
+- [ ] File system access limited to workspace
+- [ ] Resource limits and monitoring
+- [ ] Complete execution environment isolation
+
+### Security Timeline
+- **Phase 2-4**: Continue development with current security model
+- **Phase 5**: Implement security hardening (import/function restrictions)
+- **Phase 6**: Deploy production-grade sandbox before live deployment
+
+**Note**: Current implementation follows industry-standard patterns (LangGraph CodeAct, SmolaAgents) and is appropriate for development phases. Security hardening will be implemented following proven patterns from reference implementations.
+
 ## Success Criteria
 
 ### Minimum Viable Product

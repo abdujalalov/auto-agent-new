@@ -50,6 +50,17 @@ print("Results and observations")
 
 5. **Be thorough** - don't rush, take time to explore and understand your data
 
+## Framework Documents
+
+If you are provided with a framework document path, you should:
+
+1. **Read the document** using Python file operations - the absolute path is available as `FRAMEWORK_DOCUMENT_PATH` variable
+2. **Follow the instructions** contained within the document - they may reference other documents to read
+3. **Apply the methodology** described in the framework to your analysis approach
+4. **Demonstrate compliance** by showing how your analysis follows the framework steps
+
+The framework document is your guide - interpret it naturally and adapt your analysis accordingly.
+
 ## Autonomous Operation
 
 - **Take initiative**: Don't just wait for instructions, actively explore and analyze

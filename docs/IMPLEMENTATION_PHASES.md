@@ -354,4 +354,130 @@ Enhanced prompt with framework reading capabilities
 - Load existing configuration
 - Access to sample datasets for testing
 
+---
+
+## Phase 5: Security Hardening
+**Session Goal**: Secure code execution environment with safety restrictions
+**Estimated Duration**: 1-2 hours
+
+### Background
+Currently using raw `exec()` following LangGraph CodeAct README pattern. While functional, this poses security risks in production environments.
+
+### Tasks
+
+#### Task 5.1: Import Restrictions
+- Implement SmolaAgents-style dangerous module filtering
+- Create allowlist of safe imports (data science libraries)
+- Block dangerous modules: `os`, `subprocess`, `socket`, `sys`, etc.
+- Add import validation before code execution
+
+**Deliverables**:
+```python
+# Security module for import filtering
+DANGEROUS_MODULES = ["builtins", "io", "os", "subprocess", "sys", ...]
+ALLOWED_IMPORTS = ["pandas", "numpy", "matplotlib", "seaborn", ...]
+
+def validate_imports(code: str) -> bool:
+    # Parse and validate imports in code
+```
+
+#### Task 5.2: Dangerous Function Filtering  
+- Block dangerous built-in functions
+- Disable `eval`, `exec`, `__import__`, `open` access
+- Implement custom safer alternatives where needed
+- Add function call validation
+
+**Deliverables**:
+```python
+DANGEROUS_FUNCTIONS = [
+    "builtins.eval", "builtins.exec", "builtins.__import__",
+    "os.system", "subprocess.run", ...
+]
+
+def create_safe_globals() -> dict:
+    # Return filtered globals dict with dangerous functions removed
+```
+
+#### Task 5.3: File System Restrictions
+- Limit file access to workspace directories only
+- Implement path validation for file operations
+- Add safe file operation wrappers
+- Block access to system files
+
+#### Task 5.4: Resource Limits
+- Add execution timeout limits
+- Memory usage constraints
+- CPU usage monitoring
+- Prevent infinite loops and resource exhaustion
+
+**Test Criteria**:
+- [ ] Dangerous imports are blocked
+- [ ] Dangerous functions are inaccessible
+- [ ] File access limited to workspace
+- [ ] Resource limits prevent abuse
+- [ ] All current functionality still works
+
+---
+
+## Phase 6: Production Security Environment
+**Session Goal**: Enterprise-grade secure execution environment
+**Estimated Duration**: 2-3 hours
+
+### Tasks
+
+#### Task 6.1: Evaluate Sandbox Options
+- Research LangChain Sandbox (Pyodide/WebAssembly)
+- Evaluate E2B remote execution
+- Compare Docker containerization
+- Performance and security analysis
+
+#### Task 6.2: Implement Chosen Sandbox
+- Integrate selected sandbox solution
+- Migrate from raw `exec()` to sandboxed execution
+- Maintain all current agent functionality
+- Add sandbox-specific optimizations
+
+#### Task 6.3: Security Testing
+- Penetration testing of execution environment
+- Validate all security restrictions
+- Performance benchmarking
+- Security audit documentation
+
+**Deliverables**:
+```python
+# Production-ready secure executor
+class SecureExecutor:
+    def execute_code(self, code: str) -> tuple[str, dict]:
+        # Sandboxed execution with full security
+```
+
+**Test Criteria**:
+- [ ] Complete isolation from host system
+- [ ] No access to dangerous operations
+- [ ] Production-ready security posture
+- [ ] Performance acceptable for agent use
+- [ ] All agent features functional
+
+---
+
+## Implementation Priority
+
+### Current Status (Phase 2 Complete)
+- ✅ Core CodeAct engine working
+- ✅ Framework document integration  
+- ✅ Session-based workspaces
+- ✅ Serialization issues resolved
+
+### Next Priority: Phase 3
+**Advanced data analysis capabilities** - This provides immediate value for complex analytical tasks.
+
+### Security Implementation Timeline
+- **Phase 5**: After Phase 3/4 completion (when core functionality is mature)
+- **Phase 6**: Before production deployment
+
+### Notes
+- Security hardening can be developed in parallel with feature development
+- Current implementation is suitable for development and testing
+- Production deployment requires Phase 6 completion
+
 This phased approach ensures manageable development sessions with clear milestones and testable outcomes at each stage.
