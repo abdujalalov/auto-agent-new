@@ -260,9 +260,10 @@ print("REPORT_SECTION:", report_content)
 - **Future**: Can extend to Docker/E2B for enhanced security
 
 ### Document Processing
-- **Prepared Markdown**: No complex parsing, agent interprets content
+- **Index-Based Navigation**: Agent reads index document and resolves references to methodology documents
+- **Relative Path Resolution**: Documents organized in standardized `agent_tasks/task_name/` structure  
 - **Agent-Driven**: Framework interpretation through reasoning, not rigid rules
-- **Flexibility**: Agent adapts to different document formats and structures
+- **Multi-Document Support**: Agent autonomously decides which documents to read based on task
 
 ### Prompt Engineering
 - **Smolagents Inspiration**: Detailed examples and reasoning patterns
@@ -283,10 +284,27 @@ app/agents/
 │   ├── __init__.py
 │   ├── codeact_agent.py      # Main agent implementation
 │   ├── execution_context.py   # Persistent context management
-│   ├── document_reader.py     # Framework document integration
+│   ├── schemas.py           # State and config schemas
 │   └── prompts/
 │       └── codeact_system.md  # Agent prompts
+
+agent_tasks/                 # Agent task definitions
+├── data_warehouse_agent/
+│   ├── index.md            # Task index with document references
+│   └── docs/
+│       ├── data_quality_framework.md
+│       └── sql_server_guide.md
+└── other_task_type/
+    ├── index.md
+    └── docs/
 ```
+
+### Agent Task Structure
+Each agent task follows a standardized pattern:
+- **index.md**: Main entry point with project overview and document references
+- **docs/**: Methodology documents referenced by index with relative paths
+- **Relative paths**: All document references use `./docs/filename.md` format
+- **Path resolution**: Agent uses `INDEX_DOCUMENT_DIR` + relative path to access documents
 
 ## Security Considerations
 
@@ -372,15 +390,16 @@ DANGEROUS_FUNCTIONS = [
 ## Success Criteria
 
 ### Minimum Viable Product
-- [x] Agent reads framework document
+- [x] Agent reads index document and resolves references to methodology documents
 - [x] Executes multi-step data analysis with persistent context
 - [x] Generates comprehensive markdown report
 - [x] Demonstrates autonomous reasoning and framework following
+- [x] Multi-document navigation with relative path resolution
 
 ### Enhanced Capabilities
 - [ ] Complex data analysis workflows
 - [ ] Advanced visualizations and charts
-- [ ] Multiple framework document support
+- [x] Multiple framework document support
 - [ ] Interactive report elements
 
 ## Key Design Principles

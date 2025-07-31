@@ -20,8 +20,8 @@ class CodeActState(BaseModel):
         default_factory=dict, description="Persistent execution context with variables and tools"
     )
     
-    framework_document_path: Optional[str] = Field(
-        default=None, description="Path to the framework document (index/table of contents)"
+    index_document_path: Optional[str] = Field(
+        default=None, description="Path to the index/table of contents document that references other framework documents"
     )
     
     current_task: Optional[str] = Field(
@@ -32,10 +32,10 @@ class CodeActState(BaseModel):
         default_factory=list, description="Generated report sections and outputs"
     )
     
-    @field_validator('framework_document_path')
+    @field_validator('index_document_path')
     @classmethod
-    def validate_framework_path(cls, v: Optional[str]) -> Optional[str]:
-        """Validate that framework document path exists and is accessible"""
+    def validate_index_path(cls, v: Optional[str]) -> Optional[str]:
+        """Validate that index document path exists and is accessible"""
         if v is None:
             return v
         
@@ -48,12 +48,12 @@ class CodeActState(BaseModel):
             
             # Basic path validation without file system calls
             if not path.suffix.lower() in ['.md', '.txt']:
-                raise ValueError(f"Framework document must be a markdown or text file: {v}")
+                raise ValueError(f"Index document must be a markdown or text file: {v}")
             
             # Return the cleaned path string - file existence will be checked at runtime
             return v
         except Exception as e:
-            raise ValueError(f"Invalid framework document path '{v}': {e}")
+            raise ValueError(f"Invalid index document path '{v}': {e}")
 
 
 class CodeActConfig(BaseModel):

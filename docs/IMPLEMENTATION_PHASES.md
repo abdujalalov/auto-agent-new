@@ -131,11 +131,19 @@ Enhanced prompt with framework reading capabilities
 - Methodology step identification through reasoning
 
 **Test Criteria**:
-- [ ] Agent can load framework documents
-- [ ] Framework content appears in agent context
-- [ ] Agent demonstrates understanding of methodology
-- [ ] Agent plans analysis approach based on framework
-- [ ] Framework compliance visible in agent reasoning
+- [x] Agent can load index documents
+- [x] Agent can resolve and read referenced documents using relative paths
+- [x] Framework content appears in agent context
+- [x] Agent demonstrates understanding of methodology
+- [x] Agent plans analysis approach based on framework
+- [x] Framework compliance visible in agent reasoning
+
+**✅ COMPLETED - Enhanced Implementation**:
+- **Index-based navigation**: Changed from single `framework_document_path` to `index_document_path`
+- **Relative path resolution**: Added `INDEX_DOCUMENT_DIR` variable for proper path handling
+- **Standardized structure**: `agent_tasks/task_name/index.md` + `docs/` pattern
+- **Multi-document support**: Agent reads index and referenced documents autonomously
+- **AI-native approach**: Aligns with original research vision of intelligent document discovery
 
 **Example Test**:
 ```python
@@ -462,9 +470,12 @@ class SecureExecutor:
 
 ## Implementation Priority
 
-### Current Status (Phase 2 Complete)
+### Current Status (Phase 2 Complete - Enhanced)
 - ✅ Core CodeAct engine working
-- ✅ Framework document integration  
+- ✅ Index-based document navigation implemented
+- ✅ Multi-document methodology support 
+- ✅ Relative path resolution from index directory
+- ✅ Agent task structure standardized (`agent_tasks/task_name/`)
 - ✅ Session-based workspaces
 - ✅ Serialization issues resolved
 

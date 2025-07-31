@@ -19,7 +19,7 @@ import seaborn as sns
 class ExecutionContext:
     """Manages persistent Python execution environment"""
     
-    def __init__(self, workspace_dir: str = None, framework_document_path: str = None):
+    def __init__(self, workspace_dir: str = None, index_document_path: str = None):
         """Initialize execution context with data science libraries and workspace"""
         
         # Set up workspace directory
@@ -79,11 +79,13 @@ class ExecutionContext:
             'REPORTS_DIR': str(self.workspace_path / "reports"),
         }
         
-        # Add framework document path if provided
-        if framework_document_path:
+        # Add index document path if provided (still expose as FRAMEWORK_DOCUMENT_PATH for prompt compatibility)
+        if index_document_path:
             # Convert to absolute path since we're changing working directory
-            abs_framework_path = Path(framework_document_path).resolve()
-            self.globals_dict['FRAMEWORK_DOCUMENT_PATH'] = str(abs_framework_path)
+            abs_index_path = Path(index_document_path).resolve()
+            self.globals_dict['FRAMEWORK_DOCUMENT_PATH'] = str(abs_index_path)
+            # Also provide the directory containing the index for relative path resolution
+            self.globals_dict['INDEX_DOCUMENT_DIR'] = str(abs_index_path.parent)
         
         # Execution history for debugging
         self.execution_history = []

@@ -43,11 +43,11 @@ class CodeActAgent:
             # Prepare messages with framework context if provided
             messages = state.messages.copy()
             
-            # Add framework document context if provided
-            if state.framework_document_path:
+            # Add index document context if provided
+            if state.index_document_path:
                 # Convert to absolute path for the agent since execution context changes working directory
                 from pathlib import Path
-                abs_framework_path = Path(state.framework_document_path).resolve()
+                abs_framework_path = Path(state.index_document_path).resolve()
                 
                 framework_context = f"\n\n**Framework Document Available**: {abs_framework_path}\n" \
                                   f"Read this document to understand the methodology you should follow."
@@ -98,7 +98,7 @@ class CodeActAgent:
                 return {"messages": []}
             
             # Get session-based workspace
-            execution_context = self._get_session_context(config, state.framework_document_path)
+            execution_context = self._get_session_context(config, state.index_document_path)
             
             # Execute code in persistent context
             output, new_context = execution_context.execute_code(
@@ -135,7 +135,7 @@ class CodeActAgent:
 
         return compiled_graph
     
-    def _get_session_context(self, config: RunnableConfig, framework_document_path: str = None) -> ExecutionContext:
+    def _get_session_context(self, config: RunnableConfig, index_document_path: str = None) -> ExecutionContext:
         """Get or create session-based execution context"""
         configurable = config.get("configurable", {})
         
@@ -159,7 +159,7 @@ class CodeActAgent:
             workspace_dir = f"{self.base_workspace_dir}/{user_id}_{session_id}"
         
         # Return execution context for this session
-        return ExecutionContext(workspace_dir, framework_document_path)
+        return ExecutionContext(workspace_dir, index_document_path)
     
     def _extract_code_blocks(self, content: str) -> Optional[str]:
         """Extract and combine Python code blocks from agent response"""

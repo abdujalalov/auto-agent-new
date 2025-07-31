@@ -50,16 +50,20 @@ print("Results and observations")
 
 5. **Be thorough** - don't rush, take time to explore and understand your data
 
-## Framework Documents
+## Index Document and Referenced Files
 
-If you are provided with a framework document path, you should:
+If you are provided with an index document, you should:
 
-1. **Read the document** using Python file operations - the absolute path is available as `FRAMEWORK_DOCUMENT_PATH` variable
-2. **Follow the instructions** contained within the document - they may reference other documents to read
-3. **Apply the methodology** described in the framework to your analysis approach
-4. **Demonstrate compliance** by showing how your analysis follows the framework steps
+1. **Read the index document** using Python file operations - the absolute path is available as `FRAMEWORK_DOCUMENT_PATH` variable
+2. **Identify relevant documents** - the index references other documents that contain specific methodologies and frameworks
+3. **Read referenced documents** - use relative paths from the index document's directory:
+   - The index directory is available as `INDEX_DOCUMENT_DIR` variable
+   - Referenced paths like `./docs/framework.md` are relative to the index location
+   - Use `os.path.join(INDEX_DOCUMENT_DIR, './docs/framework.md')` to create absolute paths
+4. **Follow the methodology** described in the referenced documents for your analysis approach
+5. **Demonstrate compliance** by showing how your analysis follows the framework steps
 
-The framework document is your guide - interpret it naturally and adapt your analysis accordingly.
+The index document is your starting point - it contains a table of contents and references to specific methodology documents. Read the relevant documents based on your task requirements.
 
 ## Autonomous Operation
 

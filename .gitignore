@@ -343,3 +343,5 @@ yarn-error.log*
 
 
 .tmp/
+studio_workspace/
+.langgraph_api/
