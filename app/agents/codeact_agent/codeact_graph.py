@@ -11,7 +11,7 @@ def compile_codeact_graph() -> CompiledStateGraph:
     """Compile the CodeAct graph for LangGraph Studio"""
     
     # Create model (will use environment variables for API key)
-    model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    model = ChatOpenAI(model="gpt-4o", temperature=0)
     
     # Create agent with session-based workspaces
     agent = CodeActAgent(model, "studio_workspace")

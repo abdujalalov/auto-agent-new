@@ -14,6 +14,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import psycopg2
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 
 
 class ExecutionContext:
@@ -50,6 +53,12 @@ class ExecutionContext:
             'sns': sns,
             'seaborn': sns,
             
+            # Database libraries (universal patterns)
+            'psycopg2': psycopg2,
+            'create_engine': create_engine,
+            'sqlalchemy': __import__('sqlalchemy'),
+            'sa': __import__('sqlalchemy'),  # Common alias
+            
             # Built-in functions
             'print': print,
             'len': len,
@@ -70,6 +79,7 @@ class ExecutionContext:
             
             # Common imports
             '__builtins__': __builtins__,
+            'os': os,
             
             # Workspace utilities
             'WORKSPACE_PATH': str(self.workspace_path),
@@ -135,7 +145,7 @@ class ExecutionContext:
         
         try:
             # Execute the code (following LangGraph CodeAct README pattern)
-            exec(code, __builtins__, _locals)
+            exec(code, _locals)
             
             # Get the output
             output = captured_output.getvalue()
@@ -148,14 +158,19 @@ class ExecutionContext:
             })
             
             # Only return NEW variables created during execution (like LangGraph CodeAct reference)
-            # Clean up non-serializable objects that shouldn't persist (like file handles)
+            # Clean up non-serializable objects that shouldn't persist (like file handles, db connections)
             new_keys = set(_locals.keys()) - original_keys
             user_variables = {}
             for key in new_keys:
                 value = _locals[key]
-                # Skip file-like objects and other non-persistent types by their type
-                if isinstance(value, (io.IOBase, io.TextIOWrapper, io.BufferedWriter, io.BufferedReader)):
-                    continue  # File objects don't need to persist
+                # Skip non-serializable objects that shouldn't persist
+                if isinstance(value, (
+                    io.IOBase, io.TextIOWrapper, io.BufferedWriter, io.BufferedReader,  # File objects
+                    psycopg2.extensions.connection,  # Database connections
+                    psycopg2.extensions.cursor,      # Database cursors
+                    Engine  # SQLAlchemy engines
+                )):
+                    continue  # Non-serializable objects don't need to persist
                 user_variables[key] = value
             
             return output if output else "Code executed successfully.", user_variables
